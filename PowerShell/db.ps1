@@ -6,24 +6,25 @@ function Invoke-DbAction {
 		[Parameter(Mandatory = $false)]
 		[string]$database
 	)
-	if ($null -eq $env:DEVDRIVE) {
+	$basePath = $env:DEVDRIVE.Replace("\", "/")
+	if ($null -eq $basePath) {
         Write-Error "Missing environment variable: DEVDRIVE"
         return
 	}
 	if ($action -eq "start") {
-		docker compose -f "$env:DEVDRIVE\DbDeploy\docker-compose.yaml" up -d
+		docker compose -f "$basePath/DbDeploy/docker-compose.yaml" up -d
 		return
 	}
 	if ($action -eq "stop") {
-		docker compose -f "$env:DEVDRIVE\DbDeploy\docker-compose.yaml" down
+		docker compose -f "$basePath/DbDeploy/docker-compose.yaml" down
 		return
 	}
 	if ($action -eq "reset") {
-		docker compose -f "$env:DEVDRIVE\DbDeploy\docker-compose.yaml" down -v
+		docker compose -f "$basePath/DbDeploy/docker-compose.yaml" down -v
 		return
 	}
 	if ($action -eq "build"){
-		docker build -t dbdeploy:latest -f "$env:DEVDRIVE\DbDeploy\src\DbDeploy\Dockerfile" "$env:DEVDRIVE\DbDeploy"
+		docker build -t dbdeploy:latest -f "$basePath/DbDeploy/src/DbDeploy/Dockerfile" "$basePath/DbDeploy"
 		return
 	}
 	if ($action -eq "update" -or $action -eq "sync" -or $action -eq "status") {
@@ -35,14 +36,14 @@ function Invoke-DbAction {
 		if ($null -eq $dockerImage) {
 			Invoke-DbAction build
 		}
-		$dbPath = "$env:DEVDRIVE\$database.DB\"
+		$dbPath = "$basePath/$database.DB"
 		if (Test-Path $dbPath) {
-			docker run --rm --name init-db-$database --network local-net --entrypoint /opt/mssql-tools/bin/sqlcmd -w /scripts -v $dbPath\:/scripts mcr.microsoft.com/mssql-tools -S local-mssql -U sa -P P@ssw0rd -i bootstrap-database.sql
+			docker run --rm --name init-db-$database --network local-net --entrypoint /opt/mssql-tools/bin/sqlcmd -w /scripts -v $dbPath/:/scripts mcr.microsoft.com/mssql-tools -S local-mssql -U sa -P P@ssw0rd -i bootstrap-database.sql
 			if ($LASTEXITCODE -ne 0) {
 				Write-Error "SQL Server is not ready yet. Please try again in a few seconds."
 				return
 			}
-			docker run --rm --name deploy-db-$database --network local-net --volume $dbPath\src:/app/Migrations:ro --env-file $dbPath\local.env dbdeploy:latest --command $action
+			docker run --rm --name deploy-db-$database --network local-net --volume $dbPath/src:/app/Migrations:ro --env-file $dbPath/local.env dbdeploy:latest --command $action
 			return
 		}
 		Write-Error "Invalid database: $database"

@@ -3,12 +3,14 @@ function Invoke-VisualStudio {
 	param (
 		[string]$repo
 	)
+	$basePath = $env:DEVDRIVE.Replace("\", "/")
+	
 	if ($null -eq $repo) {
 		$path = Get-Location
 		$solution = Get-ChildItem -Path $path -Filter *.sln | Select-Object -First 1
 	}
-	elseif (Test-Path "$env:DEVDRIVE\$repo") {
-		$path = "$env:DEVDRIVE\$repo"
+	elseif (Test-Path "$basePath/$repo") {
+		$path = "$basePath/$repo"
 		$solution = Get-ChildItem -Path $path -Filter *.sln | Select-Object -First 1
 	}
 	elseif (Test-Path "$repo") {

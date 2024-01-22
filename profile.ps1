@@ -6,9 +6,10 @@ if ($null -eq $env:DEVDRIVE) {
 	return
 }
 
-if (Test-Path "$env:DEVDRIVE\Scripts\PowerShell") {
-	Get-ChildItem "$env:DEVDRIVE\Scripts\PowerShell\*.ps1" | ForEach-Object { . $_.FullName }
+$basePath = $env:DEVDRIVE.Replace("\", "/")
+if (Test-Path "$basePath/Scripts/PowerShell") {
+	Get-ChildItem "$basePath/Scripts/PowerShell/*.ps1" | ForEach-Object { . $_.FullName }
 }
 else {
-	Write-Error "Missing PowerShell scripts folder: $env:DEVDRIVE\Scripts\PowerShell"
+	Write-Error "Missing PowerShell scripts folder: $basePath/Scripts/PowerShell"+-
 }
