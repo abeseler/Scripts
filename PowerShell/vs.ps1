@@ -5,7 +5,7 @@ function Invoke-VisualStudio {
 	)
 	$basePath = $env:DEVDRIVE.Replace("\", "/")
 	
-	if ($null -eq $repo) {
+	if ($repo.Length -eq 0) {
 		$path = Get-Location
 		$solution = Get-ChildItem -Path $path -Filter *.sln | Select-Object -First 1
 	}
